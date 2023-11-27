@@ -7,6 +7,7 @@ HashEquiJoin::HashEquiJoin(JoinPredicate *p, DbIterator *child1, DbIterator *chi
     this->p = p;
     this->child1 = child1;
     this->child2 = child2;
+td = TupleDesc::merge(child1->getTupleDesc(), child2->getTupleDesc());
 }
 
 JoinPredicate *HashEquiJoin::getJoinPredicate() {
@@ -16,7 +17,7 @@ JoinPredicate *HashEquiJoin::getJoinPredicate() {
 
 const TupleDesc &HashEquiJoin::getTupleDesc() const {
     // TODO pa3.1: some code goes here
-    return TupleDesc::merge(child1->getTupleDesc(), child2->getTupleDesc());
+    return td;
 }
 
 std::string HashEquiJoin::getJoinField1Name() {
@@ -66,6 +67,7 @@ void HashEquiJoin::setChildren(std::vector<DbIterator *> children) {
     }
     child1 = children[0];
     child2 = children[1];
+    td = TupleDesc::merge(child1->getTupleDesc(), child2->getTupleDesc());
 }
 
 std::optional<Tuple> HashEquiJoin::fetchNext() {
