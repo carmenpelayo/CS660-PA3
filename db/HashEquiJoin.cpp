@@ -2,17 +2,21 @@
 
 using namespace db;
 
-HashEquiJoin::HashEquiJoin(JoinPredicate *p, DbIterator *child1, DbIterator *child2) {
+HashEquiJoin::HashEquiJoin(JoinPredicate p, DbIterator *child1, DbIterator *child2) : p(p){
     // TODO pa3.1: some code goes here
-    this->p = p;
     this->child1 = child1;
     this->child2 = child2;
+    this->tupleChild1 = nullptr;
+    this->tupleChild2 = nullptr;
+
+    // initialize tupleChild1 & tupleChild2
+
 td = TupleDesc::merge(child1->getTupleDesc(), child2->getTupleDesc());
 }
 
 JoinPredicate *HashEquiJoin::getJoinPredicate() {
     // TODO pa3.1: some code goes here
-    return p;
+    return &p;
 }
 
 const TupleDesc &HashEquiJoin::getTupleDesc() const {
@@ -22,12 +26,12 @@ const TupleDesc &HashEquiJoin::getTupleDesc() const {
 
 std::string HashEquiJoin::getJoinField1Name() {
     // TODO pa3.1: some code goes here
-    return child1->getTupleDesc().getFieldName(p->getField1());
+    return child1->getTupleDesc().getFieldName(p.getField1());
 }
 
 std::string HashEquiJoin::getJoinField2Name() {
     // TODO pa3.1: some code goes here
-    return child2->getTupleDesc().getFieldName(p->getField2());
+    return child2->getTupleDesc().getFieldName(p.getField2());
 }
 
 void HashEquiJoin::open() {
@@ -77,13 +81,13 @@ std::optional<Tuple> HashEquiJoin::fetchNext() {
         *tupleChild1 = child1->next();
     }
 
-    Tuple *tupleChild2;
+    Tuple *tupleChild2; //this is not initialized!!!
     while (tupleChild1!= nullptr) {
         while (child2->hasNext()) {
-            *tupleChild2 = child2->next();
+            *tupleChild2 = child2->next(); //infinite loop
             std::optional<Tuple> merged = std::nullopt;
 
-            if (p->filter(tupleChild1, tupleChild2)) {
+            if (p.filter(tupleChild1, tupleChild2)) {
                 int numField1 = tupleChild1->getTupleDesc().numFields();
                 int numField2 = tupleChild2->getTupleDesc().numFields();
                 Tuple merge(this->getTupleDesc());

@@ -15,7 +15,7 @@ namespace db {
     class HashEquiJoin : public Operator {
         // TODO pa3.1: add private members
     private:
-        JoinPredicate *p;
+        JoinPredicate p;
         DbIterator *child1;
         DbIterator *child2;
         Tuple* tupleChild1;
@@ -54,7 +54,7 @@ namespace db {
          * @param child2
          *            Iterator for the right(inner) relation to join
          */
-        HashEquiJoin(JoinPredicate *p, DbIterator *child1, DbIterator *child2);
+        HashEquiJoin(JoinPredicate p, DbIterator *child1, DbIterator *child2);
 
         JoinPredicate *getJoinPredicate();
 
