@@ -18,8 +18,8 @@ namespace db {
         JoinPredicate p;
         DbIterator *child1;
         DbIterator *child2;
-        Tuple* tupleChild1;
-        Tuple* tupleChild2;
+        Tuple *tupleChild1;
+        Tuple tupleChild2;
         TupleDesc td;
     protected:
         /**

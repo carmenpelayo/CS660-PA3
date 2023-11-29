@@ -6,12 +6,9 @@ HashEquiJoin::HashEquiJoin(JoinPredicate p, DbIterator *child1, DbIterator *chil
     // TODO pa3.1: some code goes here
     this->child1 = child1;
     this->child2 = child2;
-    this->tupleChild1 = nullptr;
-    this->tupleChild2 = nullptr;
-
-    // initialize tupleChild1 & tupleChild2
-
-td = TupleDesc::merge(child1->getTupleDesc(), child2->getTupleDesc());
+    this->tupleChild1 = nullptr; // initialize tupleChild1 & tupleChild2
+    //this->tupleChild2 = nullptr;
+    td = TupleDesc::merge(child1->getTupleDesc(), child2->getTupleDesc());
 }
 
 JoinPredicate *HashEquiJoin::getJoinPredicate() {
@@ -46,8 +43,8 @@ void HashEquiJoin::close() {
     Operator::close();
     child1->close();
     child2->close();
-    tupleChild1 = nullptr;
-    tupleChild2 = nullptr;
+    //tupleChild1 = nullptr;
+    //tupleChild2 = nullptr;
 }
 
 void HashEquiJoin::rewind() {
@@ -76,20 +73,17 @@ void HashEquiJoin::setChildren(std::vector<DbIterator *> children) {
 
 std::optional<Tuple> HashEquiJoin::fetchNext() {
     // TODO pa3.1: some code goes here
-    Tuple merged;
-    if (child1->hasNext() && tupleChild1!= nullptr) {
-        *tupleChild1 = child1->next();
-    }
-
-    Tuple *tupleChild2; //this is not initialized!!!
-    while (tupleChild1!= nullptr) {
+    while (tupleChild1 != nullptr || child1->hasNext()) {
+        if (tupleChild1 == nullptr) {
+            tupleChild1 = new Tuple(child1->next());
+        }
         while (child2->hasNext()) {
-            *tupleChild2 = child2->next(); //infinite loop
+            tupleChild2 = child2->next(); //infinite loop
             std::optional<Tuple> merged = std::nullopt;
 
-            if (p.filter(tupleChild1, tupleChild2)) {
+            if (p.filter(tupleChild1, &tupleChild2)) {
                 int numField1 = tupleChild1->getTupleDesc().numFields();
-                int numField2 = tupleChild2->getTupleDesc().numFields();
+                int numField2 = tupleChild2.getTupleDesc().numFields();
                 Tuple merge(this->getTupleDesc());
                 int numFieldMerge = merge.getTupleDesc().numFields();
 
@@ -98,7 +92,7 @@ std::optional<Tuple> HashEquiJoin::fetchNext() {
                         merge.setField(i, &tupleChild1->getField(i));
                     }
                     for (int j = numField1; j < numFieldMerge; j++) {
-                        merge.setField(j, &tupleChild2->getField(j - numField1));
+                        merge.setField(j, &tupleChild2.getField(j - numField1));
                     }
                     merged = merge;
                 }
@@ -109,7 +103,7 @@ std::optional<Tuple> HashEquiJoin::fetchNext() {
         }
 
         if (child1->hasNext()) {
-            *tupleChild1 = child1->next();
+            tupleChild1 = nullptr;
             child2->rewind();
         } else {
             break;
